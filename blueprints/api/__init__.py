@@ -181,8 +181,12 @@ def api_term_root():
         #input_data = request.form[0]
         
         new_name = input_data['name']
+        synonyms  = None
         
+        if "synonyms" in input_data:
+            synonyms = input_data["synonyms"]
         
+        # check if exists
         try:
        
             #https://pypi.org/project/PyMySQL/
@@ -206,7 +210,7 @@ def api_term_root():
                 raise InvalidUsage('Entry already exists', status_code=409)
                 
         
-        
+        # insert term
         try:
        
             #https://pypi.org/project/PyMySQL/
@@ -229,8 +233,6 @@ def api_term_root():
         try:
        
             #https://pypi.org/project/PyMySQL/
-        
-        
             with connection.cursor() as cursor:
                 
                 sql = '''SELECT `id` FROM `terms` WHERE `name`=%s'''
@@ -239,7 +241,8 @@ def api_term_root():
                 result = cursor.fetchone()
                 print(result)
         finally:
-            connection.close()
+            pass
+            
         
         if not 'id' in result:
             raise InvalidUsage('field id not in result', status_code=400)
@@ -250,10 +253,34 @@ def api_term_root():
         if new_id == None:
             raise InvalidUsage('id is empty', status_code=400)
         
-        api_result = {
-            'name' : new_name, 
-            'id': result['id']
-        }
+        # insert synonyms
+        if synonyms != None:
+            
+            for synonym in synonyms:
+                try:
+                    #https://pypi.org/project/PyMySQL/
+                    with connection.cursor() as cursor:
+                
+                       sql = '''INSERT INTO `synonyms` (`id`, `synonym`) VALUES (%s, %s);'''
+                       print(sql)
+                       cursor.execute(sql, (new_id, synonym,))
+                       result = cursor.fetchone()
+                       print(result)
+                
+                       
+                finally:
+                    pass
+        
+            
+        
+        
+        api_result = get_object(connection, str(new_id))
+        
+        connection.close()
+        
+        
+        
+        
         return jsonify(
                 api_result
         )
@@ -265,6 +292,39 @@ def api_term_root():
 
 
 
+def get_object(connection, id_str):
+    print("id_str: "+id_str)
+    print("id_str type: "+str(type(id_str)))
+    try:
+       
+        #https://pypi.org/project/PyMySQL/
+        
+        with connection.cursor() as cursor:
+           
+            sql = '''SELECT t.id, t.name, s.synonym FROM terms t, synonyms s  WHERE t.id = s.id AND t.id = %s;'''
+            print("B id_str: "+id_str)
+            print(sql)
+            cursor.execute(sql, (id_str))
+            result_array = cursor.fetchall()
+            print("get_object got:"+str(result_array))
+    except Exception as e:
+        raise InvalidUsage("(get_object) "+str(e), status_code=400)
+        
+    api_result = {
+       'id' : result_array[0]['id'],
+       'name' : result_array[0]['name']
+    }
+       
+    synonyms_array = []
+   
+    for obj in result_array:
+        synonyms_array.append(obj['synonym'])
+   
+    api_result['synonyms'] = synonyms_array
+    
+    return api_result
+        
+
 
 @api.route('/id/<id_str>')
 def api_id(id_str):
@@ -272,34 +332,12 @@ def api_id(id_str):
     logger=current_app.logger
     result =None
     connection = get_mysql_connection()
-    try:
-       
-        #https://pypi.org/project/PyMySQL/
-        
-        
-        with connection.cursor() as cursor:
-            # Read a single record
-            #sql = "SELECT `id`, `password` FROM `users` WHERE `email`=%s"
-            sql = '''SELECT t.id, t.name, s.synonym FROM terms t, synonyms s  WHERE t.id = s.id AND t.id = %s;'''
-            cursor.execute(sql, (id_str))
-            result = cursor.fetchall()
-            print(result)
-    finally:
-        connection.close()
+    
       
-        
-    api_result = {
-       'id' : result[0]['id'],
-       'name' : result[0]['name']
-    }
-       
-    synonyms_array = []
-   
-    for obj in result:
-        synonyms_array.append(obj['synonym'])
-   
-    api_result['synonyms'] = synonyms_array
- 
+    api_result = get_object(connection, str(id_str))
+    
+    connection.close()
+    
     return jsonify(
            api_result
     )
