@@ -9,6 +9,7 @@ from flask import current_app
 
 #from flask_mysqldb import MySQL
 
+import pymysql.cursors
 
 app = Flask(__name__)
 
@@ -21,6 +22,11 @@ app = Flask(__name__)
 #app.config['MYSQL_DATABASE_HOST'] = 'cvservice-mysql:5001'
 #mysql = MySQL()
 #mysql.init_app(app)
+
+
+
+
+
 
 
 
