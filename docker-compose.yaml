@@ -1,0 +1,24 @@
+
+version: '3.1'
+
+
+
+services:
+  cv-service: #docker run --rm -p 5001:5000 --name cv-service --network cv-service   mgrast/cv-service gunicorn -w1 -b 0.0.0.0:5000  --error-logfile - --log-level debug --capture-output app:app  
+    image: mgrast/cv-service
+    command: gunicorn -w1 -b 0.0.0.0:5000  --error-logfile - --log-level debug --capture-output app:app
+    depends_on: [cv-service-mysql]
+    ports:
+      - 5001:5000
+
+
+  cv-service-mysql:   #docker run --name cv-service-mysql --network cv-service -v `pwd`/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf -e MYSQL_ROOT_PASSWORD=my-secret-pw -e MYSQL_USER=cvservice -e MYSQL_PASSWORD=cvservice -e MYSQL_DATABASE=CVSERVICE -d mysql:5.7
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: my-secret-pw 
+      MYSQL_USER: cvservice 
+      MYSQL_PASSWORD: cvservice
+      MYSQL_DATABASE: CVSERVICE
+    volumes:
+      - ${PWD}/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf
+      
