@@ -1,0 +1,7 @@
+GRANT ALL PRIVILEGES  ON CVSERVICE.*  TO 'cvservice'@'localhost' IDENTIFIED BY 'cvservice';
+
+USE CVSERVICE;
+CREATE TABLE IF NOT EXISTS terms (id INT NOT NULL AUTO_INCREMENT, name text, PRIMARY KEY (id));
+
+CREATE TABLE IF NOT EXISTS synonyms (id INT NOT NULL, synonym text);
+GRANT ALL PRIVILEGES ON *.* TO 'cvservice'@'%' ;
