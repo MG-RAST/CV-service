@@ -10,7 +10,8 @@ services:
     depends_on: [cv-service-mysql]
     ports:
       - 5001:5000
-
+    volumes:
+       - ${PWD}/schema/:/schema/
 
   cv-service-mysql:   #docker run --name cv-service-mysql --network cv-service -v `pwd`/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf -e MYSQL_ROOT_PASSWORD=my-secret-pw -e MYSQL_USER=cvservice -e MYSQL_PASSWORD=cvservice -e MYSQL_DATABASE=CVSERVICE -d mysql:5.7
     image: mysql:5.7
@@ -21,4 +22,5 @@ services:
       MYSQL_DATABASE: CVSERVICE
     volumes:
       - ${PWD}/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf
+     
       
